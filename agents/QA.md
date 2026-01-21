@@ -675,41 +675,125 @@ Include this section in your visual verification report:
 
 ### Tools Available
 
-#### Playwright MCP (Recommended)
-If Playwright MCP is configured, you can automate browser verification:
+#### Tool Strategy
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| **Playwright MCP** | Automated E2E testing | Primary tool for all visual verification |
+| **Chrome DevTools MCP** | Debugging | When Playwright tests fail and you need to investigate why |
+
+---
+
+### Primary Tool: Playwright MCP (E2E Testing)
+
+The official Microsoft Playwright MCP (`@playwright/mcp`) is your **primary tool** for visual verification:
 
 ```python
 # Navigate to the application
-mcp_playwright_navigate("http://localhost:3000")
+mcp__playwright__browser_navigate(url="http://localhost:3000")
+
+# Get accessibility snapshot (understand page structure + element refs)
+mcp__playwright__browser_snapshot()
 
 # Take screenshots of key pages/states
-mcp_playwright_screenshot("screenshots/homepage.png")
-mcp_playwright_screenshot("screenshots/login_form.png")
-mcp_playwright_screenshot("screenshots/dashboard.png")
+mcp__playwright__browser_take_screenshot()  # Captures current viewport
 
-# Interact with elements
-mcp_playwright_click("#login-button")
-mcp_playwright_fill("#email-input", "test@example.com")
+# Interact with elements (use ref from browser_snapshot)
+mcp__playwright__browser_click(element="Login button", ref="e1")
+mcp__playwright__browser_type(element="Email input", text="test@example.com", ref="e2")
+mcp__playwright__browser_select_option(element="Country dropdown", values=["US"], ref="e3")
 
-# Verify element visibility
-mcp_playwright_is_visible(".error-message")
-mcp_playwright_get_text(".welcome-header")
+# Keyboard interactions
+mcp__playwright__browser_press_key(key="Enter")
 
 # Test responsive layouts
-mcp_playwright_set_viewport(375, 667)  # Mobile
-mcp_playwright_screenshot("screenshots/mobile_homepage.png")
-mcp_playwright_set_viewport(1920, 1080)  # Desktop
-mcp_playwright_screenshot("screenshots/desktop_homepage.png")
+mcp__playwright__browser_resize(width=375, height=667)   # Mobile
+mcp__playwright__browser_take_screenshot()
+mcp__playwright__browser_resize(width=1920, height=1080) # Desktop
+mcp__playwright__browser_take_screenshot()
+
+# Wait for dynamic content
+mcp__playwright__browser_wait_for(time=2000)  # Wait 2 seconds
+
+# Check network activity
+mcp__playwright__browser_network_requests()
+
+# Navigate browser history
+mcp__playwright__browser_navigate_back()
+
+# Manage tabs
+mcp__playwright__browser_tabs()
 ```
 
-#### Chrome DevTools MCP (Alternative)
-For debugging-focused verification:
-```python
-mcp_devtools_navigate("http://localhost:3000")
-mcp_devtools_screenshot("verification.png")
-mcp_devtools_console_logs()  # Check for JS errors
-mcp_devtools_network_requests()  # Verify API calls
+#### Playwright Workflow
+
+1. **Navigate**: `browser_navigate` to the app URL
+2. **Snapshot**: `browser_snapshot` to get page structure and element references
+3. **Screenshot**: `browser_take_screenshot` to capture visual state
+4. **Interact**: Use `browser_click`, `browser_type` with refs from snapshot
+5. **Verify**: Take more snapshots/screenshots after interactions
+6. **Responsive**: `browser_resize` then screenshot for different viewports
+
+#### Saving Screenshots
+
+Screenshots from `browser_take_screenshot` are returned as base64 PNG data. Save them to the `screenshots/` directory:
+```bash
+mkdir -p screenshots
+# Save each screenshot with descriptive names like:
+# screenshots/desktop_homepage.png
+# screenshots/mobile_homepage.png
+# screenshots/login_flow_step1.png
 ```
+
+---
+
+### Secondary Tool: Chrome DevTools MCP (Debugging)
+
+Use Chrome DevTools MCP (`chrome-devtools-mcp`) **when Playwright tests fail** and you need to investigate:
+
+```python
+# Navigate to the page where the issue occurred
+mcp__chrome-devtools__navigate_page(url="http://localhost:3000/problem-page")
+
+# Check console for JavaScript errors/warnings
+mcp__chrome-devtools__list_console_messages()
+
+# Inspect network requests (find failed API calls)
+mcp__chrome-devtools__list_network_requests()
+
+# Get details of a specific failed request
+mcp__chrome-devtools__get_network_request(request_id="...")
+
+# Take snapshot of DOM structure
+mcp__chrome-devtools__take_snapshot()
+
+# Run JavaScript to investigate
+mcp__chrome-devtools__evaluate_script(script="window.localStorage")
+mcp__chrome-devtools__evaluate_script(script="document.querySelectorAll('.error').length")
+
+# Take screenshot for comparison
+mcp__chrome-devtools__take_screenshot()
+```
+
+#### When to Use Chrome DevTools MCP
+
+| Scenario | What to Check |
+|----------|---------------|
+| Page blank/not rendering | `list_console_messages()` for JS errors |
+| API calls failing | `list_network_requests()` + `get_network_request()` |
+| Unexpected behavior | `evaluate_script()` to check state |
+| Layout broken | `take_snapshot()` to inspect DOM |
+| Auth issues | `evaluate_script()` to check cookies/localStorage |
+
+---
+
+### If MCP Tools Are Not Available
+
+If the MCP tools don't respond or aren't configured:
+1. Report this in your verification output as `BLOCKED: mcp_unavailable`
+2. Specify which MCP(s) are missing: `playwright`, `chrome-devtools`, or both
+3. Document what manual verification would be needed
+4. Do NOT silently skip visual verification for frontend projects
 
 ### Visual Verification Checklist
 

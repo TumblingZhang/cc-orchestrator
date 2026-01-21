@@ -106,39 +106,79 @@ pytest tests/test_{your_component}.py -v
 
 ### Step 4b: Frontend Visual Verification (If Applicable)
 
-**For frontend/UI components**, use browser developer tools to verify your work visually:
+**For frontend/UI components**, verify your work visually before submitting.
 
-#### Using Chrome DevTools MCP (If Available)
-If Chrome DevTools MCP is configured, you can:
-- **Inspect DOM**: Verify component renders correctly, check element hierarchy
-- **Debug CSS**: Inspect computed styles, test responsive layouts
-- **Monitor Network**: Watch API calls, verify request/response payloads
-- **Console Access**: Check for errors, warnings, or debug logs
-- **Performance**: Identify rendering bottlenecks
+#### Primary Tool: Chrome DevTools MCP (For Debugging)
 
-```
-# Example MCP commands for frontend debugging:
+Use Chrome DevTools MCP (`chrome-devtools-mcp`) for real-time debugging during development:
+
+```python
 # Navigate to your local dev server
-mcp_devtools_navigate("http://localhost:3000")
+mcp__chrome-devtools__navigate_page(url="http://localhost:3000")
 
-# Take screenshot for visual check
-mcp_devtools_screenshot("component_preview.png")
+# Check console for errors/warnings
+mcp__chrome-devtools__list_console_messages()
 
-# Inspect a specific element
-mcp_devtools_inspect("#my-component")
+# Take screenshot to verify visual state
+mcp__chrome-devtools__take_screenshot()
 
-# Check console for errors
-mcp_devtools_console_logs()
+# Get DOM snapshot for structure verification
+mcp__chrome-devtools__take_snapshot()
+
+# Check network requests (verify API calls work)
+mcp__chrome-devtools__list_network_requests()
+
+# Get details of a specific request (if debugging API issues)
+mcp__chrome-devtools__get_network_request(request_id="...")
+
+# Interact with elements for testing
+mcp__chrome-devtools__click(selector="#my-button")
+mcp__chrome-devtools__fill(selector="#email-input", value="test@example.com")
+
+# Run JavaScript to inspect/debug
+mcp__chrome-devtools__evaluate_script(script="document.querySelector('.error')?.textContent")
 ```
 
-#### Manual Browser Testing
-If no MCP is available:
+**Best for:**
+- Debugging CSS/layout issues in real-time
+- Checking console errors and warnings
+- Inspecting network requests and responses
+- Running JavaScript to query DOM state
+- Interactive debugging during development
+
+#### Secondary Tool: Playwright MCP (For Smoke Tests)
+
+After fixing an issue, use Playwright MCP for quick smoke tests:
+
+```python
+# Navigate and take screenshot
+mcp__playwright__browser_navigate(url="http://localhost:3000")
+mcp__playwright__browser_take_screenshot()
+
+# Verify page structure
+mcp__playwright__browser_snapshot()
+
+# Test responsive layout
+mcp__playwright__browser_resize(width=375, height=667)
+mcp__playwright__browser_take_screenshot()
+```
+
+**Best for:**
+- Quick visual verification after a fix
+- Capturing screenshots for documentation
+- Testing responsive layouts
+
+#### Fallback: Manual Browser Testing
+
+If MCP tools are not available:
 1. Start your dev server (`npm run dev`, `yarn dev`, etc.)
 2. Open browser to local URL
 3. Use F12/DevTools to inspect
 4. Verify visual appearance matches design specs
 5. Test responsive breakpoints
 6. Check for console errors
+
+**Report MCP availability**: If you cannot use MCP tools, note this in your output so QA knows to do thorough visual verification.
 
 ### Step 5: Self-Review
 

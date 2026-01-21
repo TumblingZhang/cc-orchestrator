@@ -315,8 +315,8 @@ critic_result = Task("""
 
 For projects with frontend/UI components, configure these MCPs to enable visual debugging and verification:
 
-#### Playwright MCP (Recommended for QA)
-Enables browser automation for visual verification, screenshots, and E2E testing.
+#### Playwright MCP (Primary for QA, Secondary for Developers)
+Official Microsoft Playwright MCP for browser automation, visual verification, screenshots, and E2E testing.
 
 ```json
 // In your Claude Code settings or .mcp.json
@@ -324,39 +324,48 @@ Enables browser automation for visual verification, screenshots, and E2E testing
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@anthropic/mcp-playwright"]
+      "args": ["-y", "@playwright/mcp@latest"]
     }
   }
 }
 ```
 
-**QA Agent uses this to:**
-- Navigate to running application
-- Take screenshots of all pages/states
-- Verify visual appearance matches specs
-- Test user flows end-to-end
-- Check responsive layouts
+**QA Agent uses this as PRIMARY tool for:**
+- Automated E2E visual verification
+- Taking screenshots of all pages/states (desktop + mobile)
+- Testing user flows end-to-end
+- Verifying responsive layouts
 
-#### Chrome DevTools MCP (Recommended for Developers)
-Enables real-time browser debugging for frontend development.
+**Developer Agent uses this as SECONDARY tool for:**
+- Quick smoke tests after fixing issues
+- Capturing screenshots for documentation
+
+#### Chrome DevTools MCP (Primary for Developers, Secondary for QA)
+Official Chrome DevTools MCP for real-time browser debugging.
 
 ```json
 {
   "mcpServers": {
-    "devtools": {
+    "chrome-devtools": {
       "command": "npx",
-      "args": ["@anthropic/mcp-chrome-devtools"]
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }
 ```
 
-**Developer Agent uses this to:**
-- Debug CSS and layout issues
-- Monitor network requests
-- Check console for errors
-- Inspect DOM structure
-- Test responsive behavior
+**Developer Agent uses this as PRIMARY tool for:**
+- Real-time debugging during development
+- Checking console for errors/warnings
+- Monitoring network requests and responses
+- Inspecting DOM structure
+- Running JavaScript to query state
+
+**QA Agent uses this as SECONDARY tool for:**
+- Debugging when Playwright tests fail
+- Investigating console errors
+- Analyzing failed network requests
+- Understanding why something doesn't work
 
 #### When to Enable MCPs
 
@@ -415,23 +424,32 @@ Add to your request for verbose output:
 
 **"Playwright MCP not responding"**
 - Ensure npx is available in your PATH
-- Try: `npx @anthropic/mcp-playwright --version`
-- Check that a browser can be launched (may need dependencies)
+- Try: `npx @playwright/mcp@latest --help`
+- Check that a browser can be launched (may need Playwright dependencies)
+- Install browsers if needed: `npx playwright install chromium`
 
 **"Chrome DevTools MCP connection failed"**
 - Chrome/Chromium must be installed
-- Check if remote debugging port is available
-- Try restarting Claude Code
+- Check if remote debugging port is available (default: 9222)
+- Try: `npx chrome-devtools-mcp@latest --help`
+- For sandboxed environments, use `--browser-url` option
+
+**"MCP tools not found"**
+- Verify the MCP server names match your config: `playwright`, `chrome-devtools`
+- Tools are called as `mcp__playwright__browser_navigate`, `mcp__chrome-devtools__navigate_page`
+- Check that the MCPs are properly configured in your Claude Code settings
 
 **"Screenshots not saving"**
 - Check write permissions in project directory
 - Ensure `screenshots/` directory exists or can be created
 - Verify disk space available
+- Screenshots from Playwright are base64 - they need to be decoded and saved
 
 **"Visual verification skipped"**
 - This is expected for backend-only projects
 - For frontend projects, ensure dev server is running before QA verification
 - Check that `localhost` URL is accessible
+- Verify MCP tools are responding (try a simple navigate command)
 
 ---
 
