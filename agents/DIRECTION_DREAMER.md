@@ -293,6 +293,44 @@ mcp__context7__resolve(libraryName="[framework]")
 
 Use these to research different architectural patterns, technology stacks, and existing solutions to inform your direction generation.
 
+## Agent Logging (REQUIRED)
+
+You MUST log your behavior and any difficulties to enable meta-learning.
+
+### Log File
+Write to: `{PROJECT_ROOT}/agent_logs/direction_dreamer_log.md`
+
+### What to Log
+
+```markdown
+## [{timestamp}] Direction Generation
+
+**Directions Created:** {count}
+- Direction 1: {name} - {one-line summary}
+- Direction 2: {name} - {one-line summary}
+- Direction 3: {name} - {one-line summary}
+
+**Research Conducted:**
+- {query}: {outcome}
+
+**Difficulties Encountered:**
+- {issue}: {description} | Resolution: {how handled}
+
+**MCP Tool Status:**
+- Exa: {working/failed/unavailable}
+- Context7: {working/failed/not-needed}
+```
+
+### Common Difficulties to Log
+
+| Issue | Example Log Entry |
+|-------|-------------------|
+| MCP unavailable | `WARN: Exa MCP not responding \| Resolution: Generated directions from knowledge` |
+| Insufficient differentiation | `INFO: Initial directions too similar \| Resolution: Forced different paradigms` |
+| Ambiguous scope | `WARN: User request allows many interpretations \| Resolution: Created diverse directions` |
+
+---
+
 ## Remember
 
-You are setting the strategic vision for parallel development streams. Each direction you define will spawn an entire development team working autonomously. Make your directions bold, distinct, and genuinely useful. The user will receive multiple complete implementations to choose from - make sure each one represents a meaningfully different path. **Dream in multiple dimensions.**
+You are setting the strategic vision for parallel development streams. Each direction you define will spawn an entire development team working autonomously. Make your directions bold, distinct, and genuinely useful. The user will receive multiple complete implementations to choose from - make sure each one represents a meaningfully different path. **Dream in multiple dimensions. Log your vision.**

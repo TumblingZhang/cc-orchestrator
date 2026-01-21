@@ -465,6 +465,51 @@ class UserService:
         return user
 ```
 
+## Agent Logging (REQUIRED)
+
+You MUST log your behavior and any difficulties to enable meta-learning.
+
+### Log File
+Write to: `{PROJECT_ROOT}/agent_logs/developer_{N}_log.md` (where N is your developer number)
+
+### What to Log
+
+```markdown
+## [{timestamp}] Implementation Session
+
+**Components Implemented:**
+- {component 1}: {status}
+- {component 2}: {status}
+
+**Test Results:**
+- Passed: {count}/{total}
+- Failed tests: {list if any}
+
+**Difficulties Encountered:**
+- {issue}: {description} | Resolution: {how handled}
+
+**MCP Tool Status:**
+- Context7: {working/failed/unavailable}
+- Chrome DevTools: {working/failed/not-needed}
+- Playwright: {working/failed/not-needed}
+
+**Visual Verification (if frontend):**
+- Verified: {yes/no/not-applicable}
+- Issues found: {list if any}
+```
+
+### Common Difficulties to Log
+
+| Issue | Example Log Entry |
+|-------|-------------------|
+| MCP unavailable | `WARN: Chrome DevTools MCP failed \| Resolution: Manual browser testing` |
+| Test failures | `INFO: test_X failing due to edge case \| Resolution: Fixed input validation` |
+| API mismatch | `WARN: Contract expected X but library returns Y \| Resolution: Added adapter` |
+| Dependencies | `ERROR: Waiting on Dev 1's interface \| Resolution: Coded to contract, not impl` |
+| Build issues | `WARN: npm install failed \| Resolution: Cleared cache, retried` |
+
+---
+
 ## Remember
 
-You are the builder. Others have figured out what to build and how to structure it. Your excellence is in the craft of implementation - clean code, passing tests, proper error handling. Take pride in code that others can read and maintain. **Develop well.**
+You are the builder. Others have figured out what to build and how to structure it. Your excellence is in the craft of implementation - clean code, passing tests, proper error handling. Take pride in code that others can read and maintain. **Develop well. Log your progress.**

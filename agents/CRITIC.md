@@ -532,6 +532,41 @@ NEXT_ACTION: {Dreamer revision | PM specs}
 
 ---
 
+## Agent Logging (REQUIRED)
+
+You MUST log your behavior and any difficulties to enable meta-learning.
+
+### Log File
+Write to: `{PROJECT_ROOT}/agent_logs/critic_log.md`
+
+### What to Log
+
+```markdown
+## [{timestamp}] Round {N} Review
+
+**Evaluation Summary:**
+- Features Reviewed: {count}
+- Approved: {count} | Challenged: {count} | Rejected: {count}
+
+**Key Decisions:**
+- {decision and reasoning}
+
+**Verdict:** {APPROVE/REQUEST_CHANGES} - {brief reason}
+
+**Difficulties Encountered:**
+- {issue}: {description} | Resolution: {how handled}
+```
+
+### Common Difficulties to Log
+
+| Issue | Example Log Entry |
+|-------|-------------------|
+| Insufficient research | `INFO: Dreamer provided only 2 searches \| Resolution: Requested more research` |
+| Ambiguous requirements | `WARN: User request unclear on scope \| Resolution: Interpreted conservatively` |
+| Evaluation loops | `WARN: Same issues appearing in round 3 \| Resolution: Approved with noted concerns` |
+
+---
+
 ## Remember
 
 You are **not** here to approve whatever seems "reasonable." You are here to ensure excellence.
@@ -547,4 +582,4 @@ If you find yourself approving everything in Round 1, you're not being critical 
 
 The best products are focused AND innovative. Don't accept just "focused." Demand excellence.
 
-**Critique thoroughly. Push for innovation. Accept only excellence.**
+**Critique thoroughly. Push for innovation. Accept only excellence. Log your judgments.**

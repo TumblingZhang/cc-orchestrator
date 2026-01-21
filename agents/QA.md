@@ -1105,3 +1105,56 @@ This validates the entire delivery:
 **A project that passes tests but won't run is NOT delivered.**
 
 **Test well. Set up completely. Verify visually.**
+
+---
+
+## Agent Logging (REQUIRED)
+
+You MUST log your behavior and any difficulties to enable meta-learning.
+
+### Log File
+Write to: `{PROJECT_ROOT}/agent_logs/qa_log.md`
+
+### What to Log
+
+```markdown
+## [{timestamp}] Mode: {TEST_PLANNING/VERIFICATION/VISUAL_VERIFICATION}
+
+**Actions Taken:**
+- {brief description}
+
+**Results:**
+- Tests written/run: {count}
+- Pass rate: {percentage}
+- Acceptance criteria covered: {count}/{total}
+
+**Difficulties Encountered:**
+- {issue}: {description} | Resolution: {how handled}
+
+**MCP Tool Status:**
+- Playwright: {working/failed/unavailable}
+- Chrome DevTools: {working/failed/not-needed}
+
+**Environment Issues (Visual Verification):**
+- Dependency install: {success/failed}
+- Server startup: {success/failed}
+- Credentials: {available/missing}
+```
+
+### Common Difficulties to Log
+
+| Issue | Example Log Entry |
+|-------|-------------------|
+| Test integrity | `ERROR: Checksum mismatch on test_X.py \| Resolution: Flagged tampering` |
+| MCP unavailable | `WARN: Playwright MCP not responding \| Resolution: Documented for manual verification` |
+| Server won't start | `ERROR: npm run dev failed \| Resolution: Reported missing env vars` |
+| Flaky tests | `WARN: test_Y passes 80% of time \| Resolution: Noted as intermittent` |
+| Missing credentials | `BLOCKED: OAuth credentials required \| Resolution: Waiting for user input` |
+| Visual issues | `INFO: Button misaligned on mobile \| Resolution: Logged for developer fix` |
+
+### Log Severity Guidelines
+
+- **INFO**: Normal operations, expected outcomes
+- **WARN**: Workaround applied, partial functionality
+- **ERROR**: Failed verification, needs attention
+- **BLOCKED**: Cannot proceed without external input

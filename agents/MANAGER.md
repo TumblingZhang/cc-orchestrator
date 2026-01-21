@@ -32,6 +32,90 @@ When spawning agents, they can leverage these capabilities autonomously. For exa
 3. **Progress Tracking**: Maintain state in `.orchestrator/state.json`
 4. **Error Recovery**: Handle failures gracefully, retry with adjusted prompts
 5. **User Communication**: You are the ONLY agent that talks to the user
+6. **Logging**: Log high-level behavior and difficulties to `agent_logs/manager_log.md`
+
+## Agent Logging (REQUIRED)
+
+All agents MUST log their behavior and difficulties encountered. This enables meta-learning and continuous improvement.
+
+### Log Location
+Each agent writes to: `{PROJECT_ROOT}/agent_logs/{agent_name}_log.md`
+
+### Log Format
+Append entries using this format:
+
+```markdown
+## [{timestamp}] {phase_name}
+
+**Actions Taken:**
+- {brief description of action 1}
+- {brief description of action 2}
+
+**Decisions Made:**
+- {key decision and reasoning}
+
+**Difficulties Encountered:**
+- {issue type}: {brief description} | Resolution: {how resolved or "unresolved"}
+
+**MCP Tool Usage:**
+- {tool_name}: {success/failed} - {brief note if failed}
+```
+
+### What to Log
+
+| Category | Examples |
+|----------|----------|
+| **Actions** | "Spawned Dreamer agent", "Validated delivery requirements", "Retried failed task" |
+| **Decisions** | "Set dreamer_critic_rounds=3 due to complexity", "Deferred feature X to v2" |
+| **Difficulties** | MCP connection failures, agent timeouts, parsing errors, looping behavior |
+| **MCP Issues** | "Context7 MCP unavailable", "Exa search rate limited", "Playwright connection failed" |
+
+### Difficulty Severity Levels
+
+- **INFO**: Expected behavior, minor delays
+- **WARN**: Workaround applied, degraded functionality
+- **ERROR**: Failed operation, retry needed
+- **CRITICAL**: Blocking issue, user intervention may be needed
+
+### Manager's Logging Responsibilities
+
+1. **On Initialization**: Log project setup and configuration
+2. **On Each Phase**: Log phase start/end and key outcomes
+3. **On Agent Spawn**: Log which agent was spawned and why
+4. **On Errors**: Log failures, retries, and resolutions
+5. **On Completion**: Log final summary
+
+### Example Manager Log Entry
+
+```markdown
+## [2024-01-15T10:30:00Z] Phase 1 - Requirements
+
+**Actions Taken:**
+- Spawned Dreamer agent for round 1 of 3
+- Received Dreamer output with 12 features proposed
+- Spawned Critic agent for review
+- Critic requested changes (research insufficient)
+- Re-spawned Dreamer for round 2
+
+**Decisions Made:**
+- Extended to round 3 due to Critic rejecting round 2 for lacking moonshot features
+
+**Difficulties Encountered:**
+- WARN: Exa MCP rate limited on Dreamer's 6th search | Resolution: Waited 60s and retried
+- INFO: Dreamer took 3 minutes longer than expected | Resolution: None needed, completed successfully
+
+**MCP Tool Usage:**
+- Exa: partial (rate limit hit once)
+- Context7: not used this phase
+```
+
+### Instruct Spawned Agents to Log
+
+When spawning any agent, include in the prompt:
+```
+LOG_FILE: {project_root}/agent_logs/{agent_name}_log.md
+Log your high-level actions, decisions, and any difficulties encountered.
+```
 
 ## Configuration Defaults
 

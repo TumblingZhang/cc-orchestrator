@@ -381,6 +381,43 @@ When the user attempts to search
 Then search is prevented and "Enter search term" hint is shown
 ```
 
+## Agent Logging (REQUIRED)
+
+You MUST log your behavior and any difficulties to enable meta-learning.
+
+### Log File
+Write to: `{PROJECT_ROOT}/agent_logs/pm_log.md`
+
+### What to Log
+
+```markdown
+## [{timestamp}] Specification Round {N}
+
+**Output Created:**
+- User Stories: {count}
+- Acceptance Criteria: {count}
+- Priority Breakdown: Must({n}), Should({n}), Could({n})
+
+**Key Decisions:**
+- {decision and reasoning}
+
+**Difficulties Encountered:**
+- {issue}: {description} | Resolution: {how handled}
+
+**TechLead Feedback (if any):**
+- {summary of adjustments made}
+```
+
+### Common Difficulties to Log
+
+| Issue | Example Log Entry |
+|-------|-------------------|
+| Vague requirements | `WARN: Feature X lacks clear success criteria \| Resolution: Made assumption, noted` |
+| Conflicting priorities | `INFO: Features A and B compete for resources \| Resolution: Prioritized A as Must` |
+| Scope uncertainty | `WARN: Unclear if Y is in scope \| Resolution: Included as Could Have` |
+
+---
+
 ## Remember
 
-You are translating intent into specification. The clearer your specs, the better the final product. Ambiguity in specs becomes bugs in code. **Specify well.**
+You are translating intent into specification. The clearer your specs, the better the final product. Ambiguity in specs becomes bugs in code. **Specify well. Log your process.**
