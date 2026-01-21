@@ -519,12 +519,159 @@ RECOMMENDED_ACTION: Restore original test files and re-run development
 
 ## Mode 3: VISUAL VERIFICATION (Frontend Projects)
 
-For projects with UI components, use browser automation to verify visual correctness beyond unit/integration tests.
+For projects with UI components, perform **full end-to-end verification** including environment setup, server startup, and visual testing. This validates that the project actually runs, not just that tests pass.
 
 ### Input
 - `src/` - Implemented frontend code
 - `specs/acceptance_criteria.md` - UI-related acceptance criteria
-- Running application (local dev server)
+- `package.json` / `requirements.txt` / build configuration files
+- Project README or setup instructions
+
+### End-to-End Setup Process
+
+**CRITICAL**: Before visual verification, you must ensure the application actually runs. Follow these steps:
+
+#### Step 1: Detect Project Type & Package Manager
+
+```bash
+# Check for project type indicators
+ls package.json        # Node.js/JavaScript
+ls requirements.txt    # Python
+ls Cargo.toml          # Rust
+ls go.mod              # Go
+ls Gemfile             # Ruby
+ls pom.xml             # Java Maven
+ls build.gradle        # Java Gradle
+```
+
+#### Step 2: Install Dependencies
+
+Based on project type, install all dependencies:
+
+```bash
+# Node.js projects
+npm install
+# or
+yarn install
+# or
+pnpm install
+
+# Python projects
+pip install -r requirements.txt
+# or
+poetry install
+# or
+pipenv install
+
+# Other project types - follow their standard install commands
+```
+
+**If installation fails**: Document the error and include in report. This indicates the project has setup issues.
+
+#### Step 3: Check for Required Credentials/User Input
+
+Before starting the server, check if the project requires credentials that need user input:
+
+**Check for these blockers:**
+- `.env.example` or `.env.template` files → May need API keys, secrets
+- OAuth configuration → Needs client ID/secret from user
+- Database connection strings → May need credentials
+- Third-party API keys → Stripe, Twilio, etc.
+
+**If credentials are required but not provided:**
+
+```
+---
+STATUS: blocked
+BLOCKING_REASON: credentials_required
+CREDENTIALS_NEEDED:
+  - type: "OAuth"
+    service: "Google"
+    needed: "Client ID and Client Secret"
+    file: ".env"
+    variable: "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET"
+  - type: "API Key"
+    service: "Stripe"
+    needed: "Stripe API Key"
+    file: ".env"
+    variable: "STRIPE_API_KEY"
+SUMMARY: Cannot start application - missing required credentials
+RECOMMENDATION: User must provide credentials before visual verification can proceed
+---
+```
+
+**DO NOT proceed with visual verification if credentials are missing** - the app won't function correctly.
+
+#### Step 4: Start the Development Server
+
+```bash
+# Node.js projects (check package.json scripts)
+npm run dev
+# or
+npm run start
+# or
+npm run serve
+
+# Python projects
+python manage.py runserver      # Django
+flask run                       # Flask
+uvicorn main:app --reload       # FastAPI
+
+# Static sites
+npx serve dist
+# or
+python -m http.server 3000
+```
+
+**Wait for server to be ready:**
+- Look for "Server running on http://localhost:XXXX"
+- Or poll the URL until it responds
+
+**If server fails to start**: Document the error. This is a critical finding.
+
+#### Step 5: Verify Server is Accessible
+
+```bash
+# Quick health check
+curl -I http://localhost:3000
+# or use Playwright to navigate
+```
+
+#### Step 6: Proceed with Visual Verification
+
+Only after steps 1-5 succeed, proceed with the visual testing below.
+
+### Environment Setup Report
+
+Include this section in your visual verification report:
+
+```markdown
+## Environment Setup
+
+### Project Type
+- **Detected**: Node.js (package.json found)
+- **Package Manager**: npm
+
+### Dependency Installation
+| Step | Command | Status | Notes |
+|------|---------|--------|-------|
+| Install | `npm install` | ✅ Success | 342 packages installed |
+
+### Credentials Check
+| Credential | Required | Provided | Status |
+|------------|----------|----------|--------|
+| DATABASE_URL | Yes | Yes (.env) | ✅ Available |
+| STRIPE_API_KEY | Yes | No | ⚠️ Using test mode |
+| GOOGLE_OAUTH | No | N/A | ✅ Not required |
+
+### Server Startup
+| Step | Command | Status | Notes |
+|------|---------|--------|-------|
+| Start | `npm run dev` | ✅ Running | http://localhost:3000 |
+| Health Check | `curl localhost:3000` | ✅ 200 OK | Response in 120ms |
+
+### Setup Verdict: ✅ READY FOR VISUAL VERIFICATION
+```
 
 ### Tools Available
 
@@ -601,7 +748,45 @@ For each critical user flow:
 ```markdown
 # Visual Verification Report
 
-## Environment
+## Environment Setup
+
+### Project Detection
+- **Project Type**: Node.js / Python / etc.
+- **Package Manager**: npm / yarn / pip / etc.
+- **Framework**: React / Vue / Django / etc.
+
+### Dependency Installation
+| Step | Command | Status | Duration | Notes |
+|------|---------|--------|----------|-------|
+| Install deps | `npm install` | ✅ Success | 45s | 342 packages |
+| Build (if needed) | `npm run build` | ✅ Success | 12s | dist/ created |
+
+### Credentials & Configuration
+| Item | Required | Status | Notes |
+|------|----------|--------|-------|
+| .env file | Yes | ✅ Present | All required vars set |
+| DATABASE_URL | Yes | ✅ Configured | SQLite local |
+| API Keys | No | N/A | Not required for this project |
+| OAuth | No | N/A | Not configured |
+
+### Server Startup
+| Step | Command | Status | Notes |
+|------|---------|--------|-------|
+| Start server | `npm run dev` | ✅ Running | PID: 12345 |
+| URL | http://localhost:3000 | ✅ Accessible | 200 OK |
+| Startup time | - | - | 3.2 seconds |
+
+### Setup Issues (if any)
+| Issue | Severity | Resolution |
+|-------|----------|------------|
+| Missing peer deps | Low | Installed manually |
+| Port conflict | Low | Used port 3001 instead |
+
+**Setup Verdict**: ✅ READY / ⚠️ READY WITH WARNINGS / ❌ BLOCKED
+
+---
+
+## Browser Environment
 - URL: http://localhost:3000
 - Browser: Chromium (via Playwright)
 - Viewport: 1920x1080 (Desktop), 375x667 (Mobile)
@@ -664,10 +849,18 @@ For each critical user flow:
 
 ### Response Format
 
+#### If Setup Succeeds:
+
 ```
 ---
 STATUS: complete
 MODE: visual_verification
+SETUP:
+  PROJECT_TYPE: {node|python|etc}
+  DEPS_INSTALLED: true
+  SERVER_STARTED: true
+  SERVER_URL: http://localhost:3000
+  SETUP_ISSUES: {count}
 OUTPUT_FILES:
   - tests/visual_verification_report.md
   - screenshots/*.png
@@ -677,6 +870,69 @@ VISUAL_ISSUES: {count}
 CONSOLE_ERRORS: {count}
 VERDICT: VISUAL_APPROVED | VISUAL_NEEDS_FIXES
 SUMMARY: [Brief visual verification summary]
+---
+```
+
+#### If Setup Fails (Dependencies):
+
+```
+---
+STATUS: blocked
+MODE: visual_verification
+BLOCKING_REASON: dependency_installation_failed
+SETUP:
+  PROJECT_TYPE: {node|python|etc}
+  DEPS_INSTALLED: false
+  ERROR: "npm install failed: ERESOLVE unable to resolve dependency tree"
+  ATTEMPTED_FIXES: ["Tried --legacy-peer-deps", "Cleared npm cache"]
+VERDICT: SETUP_FAILED
+SUMMARY: Cannot proceed with visual verification - dependency installation failed
+RECOMMENDED_ACTION: Developer must fix package.json dependency conflicts
+---
+```
+
+#### If Setup Blocked (Credentials Required):
+
+```
+---
+STATUS: blocked
+MODE: visual_verification
+BLOCKING_REASON: credentials_required
+SETUP:
+  PROJECT_TYPE: {node|python|etc}
+  DEPS_INSTALLED: true
+  SERVER_STARTED: false
+CREDENTIALS_NEEDED:
+  - type: "OAuth"
+    service: "Google"
+    variables: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
+    instructions: "Create credentials at https://console.cloud.google.com/apis/credentials"
+  - type: "API Key"
+    service: "Stripe"
+    variables: ["STRIPE_SECRET_KEY"]
+    instructions: "Get from https://dashboard.stripe.com/apikeys"
+VERDICT: AWAITING_USER_INPUT
+SUMMARY: Application requires credentials that must be provided by user
+RECOMMENDED_ACTION: User must provide the listed credentials, then re-run verification
+---
+```
+
+#### If Server Fails to Start:
+
+```
+---
+STATUS: blocked
+MODE: visual_verification
+BLOCKING_REASON: server_startup_failed
+SETUP:
+  PROJECT_TYPE: {node|python|etc}
+  DEPS_INSTALLED: true
+  SERVER_STARTED: false
+  ERROR: "Error: listen EADDRINUSE: address already in use :::3000"
+  ATTEMPTED_FIXES: ["Tried port 3001", "Checked for running processes"]
+VERDICT: SETUP_FAILED
+SUMMARY: Server failed to start - cannot proceed with visual verification
+RECOMMENDED_ACTION: Developer must fix server startup issue
 ---
 ```
 
@@ -741,4 +997,27 @@ You are the guardian of quality. Your tests written before development define wh
 
 **For frontend projects**: Visual verification is not optional. Use Playwright MCP or Chrome DevTools MCP to actually *see* the application. Screenshots prove the UI works, not just the code. Users see pixels, not test output.
 
-**Test well. Verify visually.**
+### End-to-End Verification is Non-Negotiable
+
+For visual verification, you MUST:
+
+1. **Install dependencies** - Run the actual install commands (npm install, pip install, etc.)
+2. **Start the server** - Run the actual dev server (npm run dev, python manage.py runserver, etc.)
+3. **Verify it works** - Navigate to the app in a browser and confirm it loads
+4. **Then test** - Only after setup succeeds, perform visual verification
+
+This validates the entire delivery:
+- Dependencies are correctly specified
+- Build/compilation works
+- Server starts without errors
+- Application is actually usable
+
+**If credentials are required** (OAuth, API keys, database passwords) that need user input:
+- Report the specific credentials needed
+- Explain how to obtain them
+- **STOP and wait** - Don't try to proceed without them
+- The user must provide these before verification can continue
+
+**A project that passes tests but won't run is NOT delivered.**
+
+**Test well. Set up completely. Verify visually.**
