@@ -1,0 +1,74 @@
+{
+  "project_id": null,
+  "project_name": null,
+  "created_at": null,
+  "user_request": null,
+  "config": {
+    "dreamer_critic_rounds": 3,
+    "pm_techlead_rounds": 2,
+    "dev_review_rounds": 3,
+    "max_developers": 5
+  },
+  "current_phase": "init",
+  "current_round": 0,
+  "developer_count": null,
+  "developer_assignments": {},
+  "phases": {
+    "init": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    "requirements": {
+      "status": "pending",
+      "current_round": 0,
+      "max_rounds": 3,
+      "dreamer_outputs": [],
+      "critic_outputs": [],
+      "final_output": null
+    },
+    "specs": {
+      "status": "pending",
+      "current_round": 0,
+      "max_rounds": 2,
+      "pm_outputs": [],
+      "techlead_outputs": [],
+      "final_outputs": []
+    },
+    "architecture": {
+      "status": "pending",
+      "outputs": []
+    },
+    "test_planning": {
+      "status": "pending",
+      "test_count": 0,
+      "test_files": [],
+      "checksums_generated": false
+    },
+    "development": {
+      "status": "pending",
+      "developers": {},
+      "review_rounds": {}
+    },
+    "verification": {
+      "status": "pending",
+      "integrity_check": null,
+      "test_results": null,
+      "acceptance_criteria_verified": null
+    },
+    "delivery": {
+      "status": "pending",
+      "delivered_at": null
+    }
+  },
+  "artifacts": {
+    "requirements": null,
+    "specs": [],
+    "architecture": [],
+    "tests": [],
+    "source": [],
+    "docs": []
+  },
+  "errors": [],
+  "task_log": []
+}
