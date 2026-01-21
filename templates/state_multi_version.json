@@ -1,0 +1,129 @@
+{
+  "project_id": null,
+  "project_name": null,
+  "created_at": null,
+  "user_request": null,
+  "config": {
+    "dreamer_critic_rounds": 3,
+    "pm_techlead_rounds": 2,
+    "dev_review_rounds": 3,
+    "max_developers": 5,
+    "multi_version_mode": true,
+    "version_count": 3
+  },
+  "current_phase": "init",
+
+  "multi_version": {
+    "enabled": true,
+    "version_count": 3,
+    "directions": [
+      {
+        "id": 1,
+        "name": null,
+        "slug": null,
+        "philosophy": null,
+        "summary": null,
+        "focus_areas": [],
+        "avoid_areas": [],
+        "assumptions": []
+      }
+    ],
+    "versions": {
+      "v1": {
+        "direction_id": 1,
+        "direction_name": null,
+        "root_path": "versions/v1_{slug}/",
+        "status": "pending",
+        "current_phase": null,
+        "phases": {
+          "requirements": {
+            "status": "pending",
+            "current_round": 0,
+            "final_output": null
+          },
+          "specs": {
+            "status": "pending",
+            "outputs": []
+          },
+          "architecture": {
+            "status": "pending",
+            "developer_count": null,
+            "outputs": []
+          },
+          "test_planning": {
+            "status": "pending",
+            "test_count": 0,
+            "checksums_generated": false
+          },
+          "development": {
+            "status": "pending",
+            "developers": {},
+            "files_created": []
+          },
+          "verification": {
+            "status": "pending",
+            "tests_passed": null,
+            "tests_total": null
+          }
+        },
+        "summary": {
+          "features_count": 0,
+          "tech_stack": [],
+          "architecture_type": null,
+          "complexity": null
+        },
+        "completed_at": null
+      }
+    }
+  },
+
+  "phases": {
+    "init": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    "directions": {
+      "status": "pending",
+      "direction_count": 0,
+      "output": null,
+      "completed_at": null
+    },
+    "version_execution": {
+      "status": "pending",
+      "versions_completed": 0,
+      "versions_total": 0,
+      "started_at": null,
+      "completed_at": null
+    },
+    "comparison": {
+      "status": "pending",
+      "output": null,
+      "completed_at": null
+    },
+    "delivery": {
+      "status": "pending",
+      "delivered_at": null
+    }
+  },
+
+  "artifacts": {
+    "directions": "requirements/directions.md",
+    "versions": {
+      "v1": {
+        "requirements": null,
+        "specs": [],
+        "architecture": [],
+        "tests": [],
+        "source": []
+      }
+    },
+    "comparison": {
+      "summary": "comparison/summary.md",
+      "detailed": "comparison/detailed_comparison.md"
+    }
+  },
+
+  "errors": [],
+  "task_log": []
+}

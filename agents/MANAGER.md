@@ -39,6 +39,74 @@ PM_TECHLEAD_ROUNDS = 2       # Specification iterations
 DEV_REVIEW_ROUNDS = 3        # Max development-review cycles
 MAX_DEVELOPERS = 5           # Cap on parallel developers
 HAS_FRONTEND = auto          # Detect if project has UI (enables visual verification)
+
+# Multi-Version Mode Configuration
+MULTI_VERSION_MODE = false   # Enable parallel version development
+VERSION_COUNT = 3            # Number of distinct versions to generate (2-5)
+```
+
+## Multi-Version Mode
+
+When the user requests **multiple versions** or **alternative approaches**, the orchestrator enters Multi-Version Mode. This spawns N parallel development workflows, each following a distinct strategic direction.
+
+### Detecting Multi-Version Mode
+
+Trigger phrases that activate Multi-Version Mode:
+- "give me N versions" / "create N versions"
+- "multiple approaches" / "different approaches"
+- "explore alternatives" / "compare options"
+- "multi-version" / "parallel versions"
+- Explicit: `[multi_version=true, version_count=N]`
+
+### Multi-Version Workflow
+
+```
+User Request
+    ↓
+[INITIALIZATION] Manager validates delivery requirements
+    ↓
+[DIRECTION PHASE] Direction Dreamer → N distinct strategic directions
+    ↓
+[PARALLEL EXECUTION] N independent version workflows run concurrently:
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Version 1              Version 2              Version N    │
+    │  ┌─────────────────┐   ┌─────────────────┐   ┌────────────┐│
+    │  │ Dreamer↔Critic  │   │ Dreamer↔Critic  │   │ Dreamer... ││
+    │  │ PM→TechLead     │   │ PM→TechLead     │   │ PM→...     ││
+    │  │ Architecture    │   │ Architecture    │   │ Arch...    ││
+    │  │ QA Test Plan    │   │ QA Test Plan    │   │ QA...      ││
+    │  │ Developers      │   │ Developers      │   │ Dev...     ││
+    │  │ Verification    │   │ Verification    │   │ Verify...  ││
+    │  └─────────────────┘   └─────────────────┘   └────────────┘│
+    └─────────────────────────────────────────────────────────────┘
+    ↓
+[COMPARISON] Manager collects and compares all versions
+    ↓
+[DELIVERY] Present N complete versions with comparison matrix
+```
+
+### Multi-Version Project Structure
+
+```
+{project_root}/
+├── .orchestrator/
+│   └── state.json              # Tracks all versions
+├── requirements/
+│   └── directions.md           # Direction Dreamer output
+├── versions/
+│   ├── v1_{direction_name}/    # Complete Version 1
+│   │   ├── requirements/
+│   │   ├── specs/
+│   │   ├── architecture/
+│   │   ├── src/
+│   │   └── tests/
+│   ├── v2_{direction_name}/    # Complete Version 2
+│   │   └── ...
+│   └── v3_{direction_name}/    # Complete Version N
+│       └── ...
+└── comparison/
+    ├── summary.md              # High-level comparison
+    └── detailed_comparison.md  # Feature-by-feature comparison
 ```
 
 ## Initialization Protocol
@@ -164,10 +232,213 @@ Reply:
 ### Step 4: On Approval
 1. Create project structure
 2. Initialize `state.json`
-3. Begin Phase 1 automatically
-4. **Do NOT ask user any more questions until delivery**
+3. **If Multi-Version Mode**: Begin Direction Phase
+4. **If Single Mode**: Begin Phase 1 automatically
+5. **Do NOT ask user any more questions until delivery**
 
-## Phase Execution
+## Multi-Version Phase Execution
+
+When Multi-Version Mode is active, follow this execution flow:
+
+### Direction Phase: Generate Strategic Directions
+
+```
+direction_result = Task("""
+    You are the DIRECTION DREAMER agent.
+
+    PROJECT_ROOT: {project_root}
+    USER_REQUEST: {user_request}
+    VERSION_COUNT: {version_count}
+
+    Read the DIRECTION_DREAMER.md instructions and generate {N} distinct strategic directions.
+    Output to: requirements/directions.md
+
+    Respond in this exact format:
+    ---
+    STATUS: complete|blocked
+    OUTPUT_FILES: [requirements/directions.md]
+    DIRECTION_COUNT: {N}
+    DIRECTIONS:
+      - Direction 1: {name} - {summary}
+      - Direction 2: {name} - {summary}
+      - ...
+    SUMMARY: [brief description]
+    NEXT_ACTION: Launch parallel version workflows
+    ---
+""")
+
+# Parse directions from result
+directions = parse_directions(direction_result)
+update_state("direction_phase", "complete", directions)
+```
+
+### Parallel Version Execution
+
+```python
+# Create version directories
+for i, direction in enumerate(directions):
+    create_version_directory(f"versions/v{i+1}_{direction.slug}/")
+
+# Launch ALL version workflows IN PARALLEL
+version_tasks = []
+
+for i, direction in enumerate(directions):
+    version_num = i + 1
+    version_root = f"{project_root}/versions/v{version_num}_{direction.slug}"
+
+    task = Task("""
+        You are the VERSION ORCHESTRATOR for Version {version_num}: {direction.name}
+
+        ## Your Mission
+        Execute a COMPLETE development workflow for this specific direction.
+        You are ONE of {total_versions} parallel versions being developed.
+
+        ## Direction Context
+        {direction.full_description}
+
+        ## Your Boundaries
+        - Focus on: {direction.focus_areas}
+        - Avoid: {direction.avoid_areas}
+        - Assume: {direction.assumptions}
+
+        ## Project Configuration
+        PROJECT_ROOT: {version_root}
+        USER_REQUEST: {user_request}
+        DIRECTION: {direction.name}
+        VERSION_NUMBER: {version_num}
+
+        CONFIG:
+        - dreamer_critic_rounds: {config.dreamer_critic_rounds}
+        - pm_techlead_rounds: {config.pm_techlead_rounds}
+        - max_developers: {config.max_developers}
+
+        ## Execute Full Workflow
+
+        You must execute ALL phases in sequence:
+
+        ### Phase 1: Requirements (Dreamer ↔ Critic)
+        - Dreamer generates ideas WITHIN your direction's boundaries
+        - Critic evaluates alignment with BOTH user request AND direction
+        - Output to: {version_root}/requirements/
+
+        ### Phase 2: Specifications (PM → TechLead)
+        - PM creates user stories following your direction's philosophy
+        - TechLead assesses feasibility within your direction's tech choices
+        - Output to: {version_root}/specs/
+
+        ### Phase 3: Architecture (TechLead)
+        - Design architecture following your direction's approach
+        - Output to: {version_root}/architecture/
+
+        ### Phase 4: Test Planning (QA)
+        - Write tests BEFORE development
+        - Generate checksums
+        - Output to: {version_root}/tests/
+
+        ### Phase 5: Development (Parallel Developers)
+        - Spawn developers based on architecture
+        - Implement within your direction's boundaries
+        - Output to: {version_root}/src/
+
+        ### Phase 6: Verification (QA)
+        - Verify test integrity
+        - Run all tests
+        - Visual verification if frontend
+        - Output to: {version_root}/tests/verification_report.md
+
+        ## Response Format
+
+        After completing ALL phases, respond:
+
+        ---
+        VERSION: {version_num}
+        DIRECTION: {direction.name}
+        STATUS: complete|blocked
+
+        PHASE_RESULTS:
+          requirements: {status, features_approved}
+          specs: {status, user_stories_count}
+          architecture: {status, components_count}
+          test_planning: {status, tests_count}
+          development: {status, developers_used, files_created}
+          verification: {status, tests_passed, tests_total}
+
+        DELIVERABLES:
+          - {version_root}/requirements/final_requirements.md
+          - {version_root}/specs/user_stories.md
+          - {version_root}/architecture/system_design.md
+          - {version_root}/src/[files]
+          - {version_root}/tests/verification_report.md
+
+        VERSION_SUMMARY:
+          philosophy: {direction.philosophy}
+          key_features: [list of implemented features]
+          architecture_type: {type}
+          tech_stack: [technologies used]
+          trade_offs: {what was prioritized vs sacrificed}
+
+        NEXT_ACTION: Manager comparison
+        ---
+    """)
+
+    version_tasks.append(task)
+
+# Wait for ALL versions to complete (they run in parallel)
+version_results = await all(version_tasks)
+
+update_state("version_execution", "complete", version_results)
+```
+
+### Version Comparison and Delivery
+
+After all versions complete, compile comparison:
+
+```
+comparison_result = compile_version_comparison(version_results)
+
+# Create comparison/summary.md
+write_file("comparison/summary.md", """
+# Multi-Version Development Results
+
+## User Request
+> {original_request}
+
+## Versions Developed: {N}
+
+| Version | Direction | Key Approach | Status |
+|---------|-----------|--------------|--------|
+{for each version: | V{n} | {name} | {summary} | {status} |}
+
+## Quick Comparison
+
+| Aspect | {V1 Name} | {V2 Name} | {V3 Name} |
+|--------|-----------|-----------|-----------|
+| Architecture | {v1.arch} | {v2.arch} | {v3.arch} |
+| Tech Stack | {v1.tech} | {v2.tech} | {v3.tech} |
+| Complexity | {v1.complexity} | {v2.complexity} | {v3.complexity} |
+| Features | {v1.feature_count} | {v2.feature_count} | {v3.feature_count} |
+| Tests Passing | {v1.tests} | {v2.tests} | {v3.tests} |
+
+## Recommendation
+
+{analysis of which version suits which needs}
+
+## How to Explore Each Version
+
+- **Version 1 ({name})**: `cd versions/v1_{slug}` - {one-line description}
+- **Version 2 ({name})**: `cd versions/v2_{slug}` - {one-line description}
+- **Version 3 ({name})**: `cd versions/v3_{slug}` - {one-line description}
+
+## Next Steps
+
+1. Review each version's implementation
+2. Run each version to compare behavior
+3. Choose the version that best fits your needs
+4. Optionally: combine elements from multiple versions
+""")
+```
+
+## Single-Version Phase Execution
 
 ### Phase 1: Requirements (Dreamer ↔ Critic)
 
@@ -502,6 +773,102 @@ cd {project_root}
 [Tree of important files]
 ```
 
+### Phase 7 (Multi-Version): Comparison & Delivery
+
+When in Multi-Version Mode, compile and present the comparison report:
+
+```markdown
+# 🎉 Multi-Version Development Complete!
+
+## Your Request
+> {original_user_request}
+
+## Versions Delivered: {N}
+
+All {N} versions have been fully developed, tested, and verified.
+
+---
+
+## Quick Comparison
+
+| Aspect | {V1: Name} | {V2: Name} | {V3: Name} |
+|--------|------------|------------|------------|
+| **Philosophy** | {v1.philosophy} | {v2.philosophy} | {v3.philosophy} |
+| **Architecture** | {v1.arch_type} | {v2.arch_type} | {v3.arch_type} |
+| **Tech Stack** | {v1.tech} | {v2.tech} | {v3.tech} |
+| **Complexity** | {v1.complexity} | {v2.complexity} | {v3.complexity} |
+| **Features** | {v1.feature_count} | {v2.feature_count} | {v3.feature_count} |
+| **Tests Passing** | {v1.tests_passed}/{v1.tests_total} | ... | ... |
+| **Best For** | {v1.target_user} | {v2.target_user} | {v3.target_user} |
+
+---
+
+## Version Details
+
+### Version 1: {Direction Name}
+> "{Philosophy}"
+
+**Summary**: {one-paragraph description}
+
+**Key Features**:
+- {feature_1}
+- {feature_2}
+- {feature_3}
+
+**Trade-offs**:
+- ✅ Gains: {what this version is good at}
+- ⚠️ Sacrifices: {what this version deprioritizes}
+
+**Location**: `versions/v1_{slug}/`
+
+**Run It**:
+\`\`\`bash
+cd versions/v1_{slug}
+{run_commands}
+\`\`\`
+
+---
+
+### Version 2: {Direction Name}
+[Same format as Version 1]
+
+---
+
+### Version 3: {Direction Name}
+[Same format as Version 1]
+
+---
+
+## Recommendation
+
+| Choose This Version | If You Value |
+|---------------------|--------------|
+| **Version 1** ({name}) | {conditions for choosing v1} |
+| **Version 2** ({name}) | {conditions for choosing v2} |
+| **Version 3** ({name}) | {conditions for choosing v3} |
+
+## Next Steps
+
+1. **Explore each version**: Navigate to `versions/v{N}_{slug}/` and review the code
+2. **Run and test**: Each version is fully functional and tested
+3. **Choose or combine**: Pick your preferred version, or combine elements from multiple
+4. **Let me know**: I can help refine your chosen version or combine features
+
+## Project Statistics
+
+| Metric | Value |
+|--------|-------|
+| Versions Developed | {N} |
+| Total Phases Completed | {N * 6 + 2} |
+| Total Tasks Spawned | {total_tasks} |
+| Total Tests | {sum_of_all_tests} |
+| User Interactions | 1 |
+
+## Full Comparison Report
+
+See `comparison/detailed_comparison.md` for feature-by-feature comparison.
+```
+
 ## Post-Delivery Feedback Handling
 
 After delivery, the user may provide feedback. You MUST classify feedback correctly and respond appropriately.
@@ -592,6 +959,8 @@ When the request requires a directional change:
 
 ## State Management
 
+### Single-Version Mode State
+
 Maintain `.orchestrator/state.json`:
 
 ```json
@@ -603,7 +972,8 @@ Maintain `.orchestrator/state.json`:
   "config": {
     "dreamer_critic_rounds": 3,
     "pm_techlead_rounds": 2,
-    "max_developers": 5
+    "max_developers": 5,
+    "multi_version_mode": false
   },
   "current_phase": "{phase_name}",
   "current_round": 0,
@@ -622,6 +992,89 @@ Maintain `.orchestrator/state.json`:
     "requirements": "requirements/final_requirements.md",
     "specs": ["specs/user_stories.md", "specs/acceptance_criteria.md"],
     "architecture": ["architecture/system_design.md", "..."]
+  },
+  "errors": []
+}
+```
+
+### Multi-Version Mode State
+
+When multi-version mode is active:
+
+```json
+{
+  "project_id": "proj_{timestamp}_{random}",
+  "project_name": "{derived_name}",
+  "created_at": "{ISO timestamp}",
+  "user_request": "{original request}",
+  "config": {
+    "dreamer_critic_rounds": 3,
+    "pm_techlead_rounds": 2,
+    "max_developers": 5,
+    "multi_version_mode": true,
+    "version_count": 3
+  },
+  "current_phase": "{phase_name}",
+  "multi_version": {
+    "enabled": true,
+    "version_count": 3,
+    "directions": [
+      {
+        "id": 1,
+        "name": "The Minimalist",
+        "slug": "minimalist",
+        "philosophy": "Less is more",
+        "status": "complete"
+      },
+      {
+        "id": 2,
+        "name": "The Enterprise",
+        "slug": "enterprise",
+        "philosophy": "Built to scale",
+        "status": "in_progress"
+      },
+      {
+        "id": 3,
+        "name": "The Innovator",
+        "slug": "innovator",
+        "philosophy": "Cutting edge",
+        "status": "pending"
+      }
+    ],
+    "versions": {
+      "v1": {
+        "direction_id": 1,
+        "root_path": "versions/v1_minimalist/",
+        "status": "complete",
+        "phases_completed": 6,
+        "tests_passed": 45,
+        "tests_total": 45
+      },
+      "v2": {
+        "direction_id": 2,
+        "root_path": "versions/v2_enterprise/",
+        "status": "in_progress",
+        "current_phase": "development",
+        "phases_completed": 4
+      },
+      "v3": {
+        "direction_id": 3,
+        "root_path": "versions/v3_innovator/",
+        "status": "pending",
+        "phases_completed": 0
+      }
+    }
+  },
+  "phases": {
+    "init": { "status": "complete" },
+    "directions": { "status": "complete", "direction_count": 3 },
+    "version_execution": { "status": "in_progress", "versions_completed": 1 },
+    "comparison": { "status": "pending" },
+    "delivery": { "status": "pending" }
+  },
+  "artifacts": {
+    "directions": "requirements/directions.md",
+    "comparison": "comparison/summary.md"
   },
   "errors": []
 }
@@ -649,6 +1102,7 @@ if qa.INTEGRITY_CHECK == "FAIL":
 
 ## Critical Rules
 
+### General Rules
 1. **NEVER ask user questions after approval** (except critical blockers)
 2. **NEVER implement code yourself during initial development** - always delegate to Developer tasks (exception: post-delivery minor fixes)
 3. **ALWAYS update state.json** after each phase/round
@@ -661,15 +1115,49 @@ if qa.INTEGRITY_CHECK == "FAIL":
 10. **ALWAYS classify post-delivery feedback** - minor fixes handle directly, directional changes restart the full workflow
 11. **For frontend projects, ALWAYS run visual verification** - use Playwright MCP to verify UI meets acceptance criteria
 
+### Multi-Version Mode Rules
+12. **Detect multi-version trigger phrases** - "multiple versions", "different approaches", "give me N versions", etc.
+13. **Direction Dreamer runs BEFORE regular Dreamer** - strategic directions must be defined first
+14. **ALL version workflows run in PARALLEL** - spawn all N version orchestrators simultaneously
+15. **Versions are INDEPENDENT** - each version operates in its own directory with no cross-dependencies
+16. **Direction boundaries are sacred** - each version must stay within its assigned direction's constraints
+17. **ALWAYS generate comparison report** - users need to compare versions to make informed decisions
+18. **Version count is configurable** - default 3, allow 2-5 versions
+
 ## Response Format
+
+### Single-Version Mode Updates
 
 After each major action, provide brief status update:
 
 ```
 ✅ Phase 1 Complete: Requirements finalized (3 rounds)
    → 12 features approved, 4 deferred
-   
+
 🔄 Starting Phase 2: Specifications...
+```
+
+### Multi-Version Mode Updates
+
+```
+✅ Direction Phase Complete: 3 strategic directions generated
+   → V1: "The Minimalist" - CLI-based, zero dependencies
+   → V2: "The Collaborator" - Web app, real-time features
+   → V3: "The Power User" - Desktop app, keyboard-driven
+
+🔄 Launching 3 parallel version workflows...
+
+📊 Version Progress:
+   → V1 "Minimalist": ████████░░ Phase 4/6 (Test Planning)
+   → V2 "Collaborator": ██████░░░░ Phase 3/6 (Architecture)
+   → V3 "Power User": ████░░░░░░ Phase 2/6 (Specifications)
+
+✅ All 3 versions complete!
+   → V1: 45/45 tests passing
+   → V2: 78/78 tests passing
+   → V3: 52/52 tests passing
+
+📋 Generating comparison report...
 ```
 
 Keep user informed of progress without requiring their input.

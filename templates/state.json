@@ -7,16 +7,32 @@
     "dreamer_critic_rounds": 3,
     "pm_techlead_rounds": 2,
     "dev_review_rounds": 3,
-    "max_developers": 5
+    "max_developers": 5,
+    "multi_version_mode": false,
+    "version_count": 3
   },
   "current_phase": "init",
   "current_round": 0,
   "developer_count": null,
   "developer_assignments": {},
+
+  "multi_version": {
+    "enabled": false,
+    "version_count": 0,
+    "directions": [],
+    "versions": {}
+  },
+
   "phases": {
     "init": {
       "status": "pending",
       "started_at": null,
+      "completed_at": null
+    },
+    "directions": {
+      "status": "pending",
+      "direction_count": 0,
+      "directions": [],
       "completed_at": null
     },
     "requirements": {
@@ -62,12 +78,14 @@
     }
   },
   "artifacts": {
+    "directions": null,
     "requirements": null,
     "specs": [],
     "architecture": [],
     "tests": [],
     "source": [],
-    "docs": []
+    "docs": [],
+    "comparison": null
   },
   "errors": [],
   "task_log": []

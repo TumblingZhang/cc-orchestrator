@@ -6,21 +6,23 @@ Autonomous Multi-Agent Software Development System for Claude Code
 1. [Overview](#overview)
 2. [Installation](#installation)
 3. [Usage](#usage)
-4. [How It Works](#how-it-works)
-5. [Configuration](#configuration)
-6. [Troubleshooting](#troubleshooting)
+4. [Multi-Version Mode](#multi-version-mode)
+5. [How It Works](#how-it-works)
+6. [Configuration](#configuration)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-CC Orchestrator transforms Claude Code into a fully autonomous software development team. You provide a single request, approve the approach, and receive a complete, tested project.
+CC Orchestrator transforms Claude Code into a fully autonomous software development team. You provide a single request, approve the approach, and receive a complete, tested project. Now with **Multi-Version Mode** to explore multiple implementation approaches in parallel.
 
 ### Key Features
-- 🤖 **7 Specialized Agents**: Manager, Dreamer, Critic, PM, TechLead, Developers, QA
+- 🤖 **8 Specialized Agents**: Manager, Direction Dreamer, Dreamer, Critic, PM, TechLead, Developers, QA
 - 🔄 **Single User Interaction**: Approve once, receive complete delivery
 - 📝 **Test-First Development**: QA writes tests before any code
 - ⚡ **Parallel Development**: Multiple developers work simultaneously
+- 🔀 **Multi-Version Mode**: Generate N completely different implementations in parallel
 - 🔒 **Integrity Checks**: Checksummed tests prevent tampering
 - 📊 **Full Traceability**: Every decision documented
 - 👁️ **Visual Verification**: QA uses Playwright MCP to visually verify frontend (optional)
@@ -110,6 +112,97 @@ For complex projects, provide more detail:
 - React frontend with charts
 - Export to CSV/PDF
 ```
+
+---
+
+## Multi-Version Mode
+
+When you want to explore multiple implementation approaches, use Multi-Version Mode. This generates N completely different versions of your project in parallel.
+
+### Activating Multi-Version Mode
+
+**Explicit configuration:**
+```
+@cc-orchestrator/agents/MANAGER.md [multi_version=true, version_count=3]
+Build a task management application
+```
+
+**Natural language triggers:**
+```
+# Any of these phrases activate multi-version mode:
+@cc-orchestrator/agents/MANAGER.md Build a blog - give me 3 versions
+@cc-orchestrator/agents/MANAGER.md Create an e-commerce site - explore different approaches
+@cc-orchestrator/agents/MANAGER.md Design a dashboard - multiple versions please
+@cc-orchestrator/agents/MANAGER.md Build a CLI tool - compare alternatives
+```
+
+### How Multi-Version Mode Works
+
+1. **Direction Dreamer** generates N strategically different directions
+2. **N parallel workflows** execute (each with full Dreamer→Critic→PM→TechLead→QA→Dev→QA)
+3. **Comparison report** summarizes all versions
+4. **User receives N complete implementations** to choose from
+
+```
+User Request → Direction Dreamer → N Distinct Directions
+                                          ↓
+                    ┌─────────────────────┼─────────────────────┐
+                    ↓                     ↓                     ↓
+               Version 1             Version 2             Version N
+            "The Minimalist"      "The Enterprise"      "The Innovator"
+           ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+           │ Dreamer↔Critic  │  │ Dreamer↔Critic  │  │ Dreamer↔Critic  │
+           │ PM→TechLead     │  │ PM→TechLead     │  │ PM→TechLead     │
+           │ Architecture    │  │ Architecture    │  │ Architecture    │
+           │ QA→Dev→QA       │  │ QA→Dev→QA       │  │ QA→Dev→QA       │
+           └─────────────────┘  └─────────────────┘  └─────────────────┘
+                    ↓                     ↓                     ↓
+                    └─────────────────────┼─────────────────────┘
+                                          ↓
+                              Comparison & Delivery
+                              (N complete versions)
+```
+
+### Example Direction Output
+
+For "Build a task management app", Direction Dreamer might generate:
+
+| Direction | Philosophy | Key Characteristics |
+|-----------|------------|---------------------|
+| **The Minimalist** | "Less is more" | CLI-based, plain text storage, zero dependencies |
+| **The Collaborator** | "Teams first" | Web app, real-time sync, team features, integrations |
+| **The Power User** | "Efficiency is everything" | Desktop app, vim keybindings, scriptable API |
+
+### Multi-Version Project Structure
+
+```
+your_project/
+├── .orchestrator/
+│   └── state.json                    # Tracks all versions
+├── requirements/
+│   └── directions.md                 # Direction Dreamer output
+├── versions/
+│   ├── v1_minimalist/                # Complete Version 1
+│   │   ├── requirements/
+│   │   ├── specs/
+│   │   ├── architecture/
+│   │   ├── src/
+│   │   └── tests/
+│   ├── v2_collaborator/              # Complete Version 2
+│   │   └── ...
+│   └── v3_power_user/                # Complete Version 3
+│       └── ...
+└── comparison/
+    ├── summary.md                    # Quick comparison
+    └── detailed_comparison.md        # Feature-by-feature
+```
+
+### Choosing Your Version
+
+After delivery, you can:
+1. **Pick one version** that best fits your needs
+2. **Combine elements** from multiple versions
+3. **Use comparison report** to understand trade-offs
 
 ---
 
@@ -215,6 +308,8 @@ critic_result = Task("""
 | `pm_techlead_rounds` | 2 | Specification iterations |
 | `dev_review_rounds` | 3 | Max development-review cycles |
 | `max_developers` | 5 | Maximum parallel developers |
+| `multi_version_mode` | false | Enable parallel version development |
+| `version_count` | 3 | Number of versions to generate (2-5) |
 
 ### MCP Configuration (For Frontend Projects)
 
@@ -344,20 +439,22 @@ Add to your request for verbose output:
 
 ```
 cc-orchestrator/
-├── SKILL.md              # Skill documentation
-├── README.md             # This file
+├── SKILL.md                        # Skill documentation
+├── README.md                       # This file
 ├── agents/
-│   ├── MANAGER.md        # Orchestration controller
-│   ├── DREAMER.md        # Creative ideation
-│   ├── CRITIC.md         # Alignment verification
-│   ├── PM.md             # Product specifications
-│   ├── TECHLEAD.md       # Architecture & review
-│   ├── DEVELOPER.md      # Implementation
-│   └── QA.md             # Testing & verification
+│   ├── MANAGER.md                  # Orchestration controller
+│   ├── DIRECTION_DREAMER.md        # Multi-version strategic directions
+│   ├── DREAMER.md                  # Creative ideation
+│   ├── CRITIC.md                   # Alignment verification
+│   ├── PM.md                       # Product specifications
+│   ├── TECHLEAD.md                 # Architecture & review
+│   ├── DEVELOPER.md                # Implementation
+│   └── QA.md                       # Testing & verification
 ├── templates/
-│   └── state.json        # State template
+│   ├── state.json                  # State template (single-version)
+│   └── state_multi_version.json    # State template (multi-version)
 └── scripts/
-    └── init_project.sh   # Project initialization
+    └── init_project.sh             # Project initialization
 ```
 
 ---
