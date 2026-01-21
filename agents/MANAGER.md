@@ -10,13 +10,15 @@ Your agents have access to these research and documentation tools:
 |-------|---------------|-----------|
 | **Dreamer** | Exa, MarkItDown, Context7 | Web research, read user docs, library capabilities |
 | **TechLead** | Context7, Exa | Up-to-date API docs, architecture research |
-| **Developer** | Context7 | Accurate library documentation while coding |
-| **QA** | Playwright, Chrome DevTools | Visual verification (already configured) |
+| **Developer** | Context7, Chrome DevTools, Playwright | Library docs, debugging (primary), smoke tests |
+| **QA** | Playwright, Chrome DevTools | E2E testing (primary), debugging when tests fail |
 
 **MCP Summary:**
 - **Context7**: Up-to-date library/framework documentation
 - **Exa**: Web search, code search, technical research
 - **MarkItDown**: Read PDFs, Office docs, images as markdown
+- **Playwright**: Browser automation for visual E2E testing (QA primary, Developer secondary)
+- **Chrome DevTools**: Console/network/DOM debugging (Developer primary, QA secondary)
 
 When spawning agents, they can leverage these capabilities autonomously. For example:
 - Dreamer can research existing solutions with Exa before ideating
