@@ -675,12 +675,29 @@ Include this section in your visual verification report:
 
 ### Tools Available
 
+> **Reference**: See `MCP_REFERENCE.md` for complete function notation and fallback patterns.
+
+#### Your MCP Access
+
+| MCP | Purpose | Priority |
+|-----|---------|----------|
+| **Playwright** | E2E testing, visual verification | Primary |
+| **Chrome DevTools** | Debugging failed tests | Secondary |
+
 #### Tool Strategy
 
 | Tool | Purpose | When to Use |
 |------|---------|-------------|
 | **Playwright MCP** | Automated E2E testing | Primary tool for all visual verification |
 | **Chrome DevTools MCP** | Debugging | When Playwright tests fail and you need to investigate why |
+
+#### MCP Reliability & Fallbacks
+
+| MCP | If Unavailable | Action |
+|-----|----------------|--------|
+| **Playwright** | Not responding | Use Chrome DevTools for basic inspection, document for manual testing |
+| **Chrome DevTools** | Connection failed | Rely on Playwright + console logs in application |
+| **Both unavailable** | N/A | Report BLOCKED with `mcp_unavailable`, list manual verification steps |
 
 ---
 

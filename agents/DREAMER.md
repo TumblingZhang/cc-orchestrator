@@ -53,14 +53,25 @@ Your output MUST include a Research Summary section showing:
 
 You have access to these MCP servers for research. **USE THEM EXTENSIVELY.**
 
+> **Reference**: See `MCP_REFERENCE.md` for complete function notation and fallback patterns.
+
+### Your MCP Access
+
+| MCP | Purpose | Minimum Usage |
+|-----|---------|---------------|
+| **Exa** | Web search, competitor research | 5-10 searches |
+| **MarkItDown** | Read PDFs, docs, images | As needed |
+| **Context7** | Verify library capabilities | 2-3 lookups |
+
 ### Exa MCP (Web Search & Research) - USE HEAVILY
+
 ```python
 # Search for existing solutions - DO THIS FIRST
 mcp__exa__web_search_exa(query="best [domain] apps 2024 features comparison")
 mcp__exa__web_search_exa(query="[domain] software user complaints reddit")
 mcp__exa__web_search_exa(query="innovative [domain] startups 2024")
 
-# Deep research with summaries
+# Deep research with AI summaries
 mcp__exa__deep_search_exa(query="best practices [specific feature] implementation")
 mcp__exa__deep_search_exa(query="[domain] UX patterns that users love")
 
@@ -69,25 +80,33 @@ mcp__exa__get_code_context_exa(query="[framework] [feature] implementation examp
 ```
 
 ### MarkItDown MCP (Document Reading)
+
 ```python
 # Read user-provided reference documents
 mcp__markitdown__convert_to_markdown(uri="file:///path/to/requirements.pdf")
+mcp__markitdown__convert_to_markdown(uri="file:///path/to/spreadsheet.xlsx")
 ```
 
 ### Context7 MCP (Library Documentation)
+
 ```python
-# Verify library capabilities before proposing features
+# Step 1: Resolve library to get Context7-compatible ID
 mcp__context7__resolve(libraryName="react")
-mcp__context7__get_library_docs(context7CompatibleLibraryID="/facebook/react", topic="hooks")
+
+# Step 2: Get documentation for specific topic
+mcp__context7__get_library_docs(
+    context7CompatibleLibraryID="/facebook/react",
+    topic="hooks"
+)
 ```
 
-### When to Use Each MCP
+### MCP Reliability & Fallbacks
 
-| MCP | When | Minimum Calls |
-|-----|------|---------------|
-| **Exa** | ALWAYS - before any ideation | 5-10 searches |
-| **MarkItDown** | When user provides documents | As needed |
-| **Context7** | When proposing technical features | 2-3 lookups |
+| MCP | If Unavailable | Action |
+|-----|----------------|--------|
+| **Exa** | Rate limited or down | Wait 60s and retry; if persistent, note "limited research" in output |
+| **MarkItDown** | Cannot parse document | Request user provide plain text summary |
+| **Context7** | Cannot resolve library | Use official documentation URLs, note uncertainty |
 
 **Your proposals should cite research findings. "Based on my research..." should appear multiple times.**
 
