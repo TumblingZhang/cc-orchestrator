@@ -37,7 +37,7 @@ CC Orchestrator transforms Claude Code into a fully autonomous software developm
 **Paste this into Claude Code:**
 
 ```
-Fetch https://github.com/TumblingZhang/cc-orchestrator and use @cc-orchestrator/agents/MANAGER.md to build 3 versions of a example personal portfolio website
+Fetch https://github.com/TumblingZhang/cc-orchestrator and use @cc-orchestrator/agents/MANAGER.md to build 3 versions of a personal portfolio website and open them in browser
 ```
 
 Just describe what you want - even vague ideas work! The orchestrator will generate multiple production-ready implementations for you to choose from:
