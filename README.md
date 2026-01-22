@@ -32,7 +32,27 @@ CC Orchestrator transforms Claude Code into a fully autonomous software developm
 
 ## Installation
 
-### Option 1: Copy to Claude Code Skills Directory (Recommended)
+### Quick Start (Easiest - No Setup Required)
+
+**Just paste this into Claude Code and start building:**
+
+```
+Fetch and use the cc-orchestrator skill from https://github.com/TumblingZhang/cc-orchestrator
+
+Then use @cc-orchestrator/agents/MANAGER.md to orchestrate: Build a [your project here]
+```
+
+**Or add this one line to your project's `CLAUDE.md` for permanent access:**
+
+```markdown
+When I say "orchestrate", fetch https://github.com/TumblingZhang/cc-orchestrator and use @cc-orchestrator/agents/MANAGER.md
+```
+
+That's it! Claude will fetch the skill and start orchestrating your project.
+
+---
+
+### Option 1: Copy to Claude Code Skills Directory (Recommended for Offline Use)
 
 ```bash
 # Clone or download the cc-orchestrator folder
