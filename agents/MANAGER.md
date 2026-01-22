@@ -129,6 +129,81 @@ HAS_FRONTEND = auto          # Detect if project has UI (enables visual verifica
 # Multi-Version Mode Configuration
 MULTI_VERSION_MODE = false   # Enable parallel version development
 VERSION_COUNT = 3            # Number of distinct versions to generate (2-5)
+
+# Parallel Execution Mode
+PARALLEL_EXECUTION = true    # Enable aggressive parallelization
+```
+
+---
+
+## Parallel Execution Strategy
+
+**CRITICAL**: Maximize parallelization to reduce total execution time. Use these patterns:
+
+### Parallelization Opportunities
+
+| Phases | Can Parallelize? | Condition |
+|--------|-----------------|-----------|
+| Architecture + QA Test Planning | ✅ YES | After specs approved |
+| All Developer Tasks | ✅ YES | After architecture |
+| All Code Reviews | ✅ YES | After developers complete |
+| PM + TechLead (round 1 only) | ⚠️ PARTIAL | Draft in parallel, then sync |
+
+### Workflow Optimization
+
+```
+SEQUENTIAL (Cannot parallelize):
+  User Request → Dreamer↔Critic Loop → Final Requirements
+
+PARALLEL PHASE 1 (After requirements approved):
+  ┌─ PM: Draft user stories
+  └─ TechLead: Draft initial architecture ideas (speculative)
+
+SEQUENTIAL (Sync point):
+  TechLead feasibility review of PM specs
+
+PARALLEL PHASE 2 (After specs approved):
+  ┌─ TechLead: Final architecture + component breakdown
+  └─ QA: Begin test plan based on acceptance criteria
+
+SEQUENTIAL (Sync point):
+  Merge architecture assignments with test assignments
+
+PARALLEL PHASE 3 (After architecture + tests ready):
+  ┌─ Developer 1: Component A
+  ├─ Developer 2: Component B
+  ├─ Developer 3: Component C
+  └─ Developer N: Component N
+
+PARALLEL PHASE 4 (After developers complete):
+  ┌─ TechLead: Review Dev 1
+  ├─ TechLead: Review Dev 2
+  ├─ TechLead: Review Dev 3
+  └─ TechLead: Review Dev N
+
+PARALLEL PHASE 5 (After reviews pass):
+  ┌─ QA: Test verification
+  └─ QA: Visual verification (if frontend)
+```
+
+### Implementation Pattern
+
+When spawning parallel tasks, use this pattern:
+
+```python
+# PARALLEL SPAWN - use a single Task() call with multiple sub-prompts
+# or spawn multiple Task() calls in the same message
+
+# Example: Parallel code reviews
+review_tasks = [
+    Task("Review Developer 1 code..."),
+    Task("Review Developer 2 code..."),
+    Task("Review Developer 3 code...")
+]
+# All reviews run simultaneously
+
+# Wait for all to complete
+all_reviews = await all(review_tasks)
 ```
 
 ## Multi-Version Mode
@@ -623,53 +698,51 @@ for round in 1..PM_TECHLEAD_ROUNDS:
         break
 ```
 
-### Phase 3: Architecture (TechLead)
+### Phase 3+4: Architecture + Test Planning (PARALLEL)
 
-```
-architecture_result = Task("""
+**OPTIMIZATION**: Run TechLead architecture and QA test planning IN PARALLEL.
+
+```python
+# Spawn BOTH tasks simultaneously
+architecture_task = Task("""
     You are the TECH LEAD agent in ARCHITECTURE mode.
-    
+
     PROJECT_ROOT: {project_root}
     INPUT: specs/user_stories.md, specs/acceptance_criteria.md, specs/technical_constraints.md
-    
+
     Read TECHLEAD.md and design architecture.
     Output to:
     - architecture/system_design.md
-    - architecture/api_contracts.md  
+    - architecture/api_contracts.md
     - architecture/component_breakdown.md
-    
+
     CRITICAL: Determine DEVELOPER_COUNT and assign components to each developer.
-    
+
     ---
     STATUS: complete|blocked
     OUTPUT_FILES: [list]
     DEVELOPER_COUNT: {N}
     ASSIGNMENTS: [dev1: components, dev2: components, ...]
     SUMMARY: [architecture description]
-    NEXT_ACTION: QA test planning
+    NEXT_ACTION: Development (after QA test planning)
     ---
 """)
 
-store developer_count and assignments in state.json
-```
-
-### Phase 4: Test Planning (QA - BEFORE Development)
-
-```
-qa_planning_result = Task("""
+qa_planning_task = Task("""
     You are the QA agent in TEST PLANNING mode.
-    
+
     PROJECT_ROOT: {project_root}
-    INPUT: specs/, architecture/
-    
+    INPUT: specs/user_stories.md, specs/acceptance_criteria.md
+
     Read QA.md and create test plan.
     CRITICAL: Write tests BEFORE any development begins.
-    
+    NOTE: You can start test planning from specs while architecture is being finalized.
+
     Output to:
     - tests/test_plan.md
     - tests/test_*.py (all test files)
     - tests/.checksums (SHA256 of each test file)
-    
+
     ---
     STATUS: complete|blocked
     OUTPUT_FILES: [list all test files]
@@ -679,6 +752,13 @@ qa_planning_result = Task("""
     NEXT_ACTION: Development
     ---
 """)
+
+# PARALLEL EXECUTION - wait for both
+architecture_result, qa_planning_result = await all([architecture_task, qa_planning_task])
+
+# Merge results - assign tests to developers based on architecture
+merge_test_assignments(architecture_result, qa_planning_result)
+store developer_count and assignments in state.json
 ```
 
 ### Phase 5: Development (Parallel Developers)
@@ -720,21 +800,22 @@ for dev_num in 1..developer_count:
     """)
     developer_tasks.append(task)
 
-# Wait for all developers
+# Wait for all developers (PARALLEL)
 results = await all(developer_tasks)
 
-# Code review loop
+# PARALLEL Code reviews - review ALL developers simultaneously
+review_tasks = []
 for each developer:
-    review_result = Task("""
+    review_task = Task("""
         You are the TECH LEAD in CODE REVIEW mode.
-        
+
         DEVELOPER: {dev_num}
         FILES: {developer_output_files}
         ARCHITECTURE: architecture/system_design.md
         CONTRACTS: architecture/api_contracts.md
-        
+
         Read TECHLEAD.md and review code.
-        
+
         ---
         STATUS: complete
         VERDICT: APPROVE|REQUEST_CHANGES
@@ -742,10 +823,21 @@ for each developer:
         SUMMARY: [review summary]
         ---
     """)
-    
-    if REQUEST_CHANGES:
-        # Re-spawn developer with feedback
-        retry_task = Task(developer_prompt + review_feedback)
+    review_tasks.append(review_task)
+
+# PARALLEL EXECUTION - all reviews run simultaneously
+all_reviews = await all(review_tasks)
+
+# Handle REQUEST_CHANGES in parallel for any that need fixes
+retry_tasks = []
+for review in all_reviews:
+    if review.VERDICT == "REQUEST_CHANGES":
+        retry_task = Task(developer_prompt + review.feedback)
+        retry_tasks.append(retry_task)
+
+if retry_tasks:
+    # Parallel retries
+    await all(retry_tasks)
 ```
 
 ### Phase 6: Verification (QA)
