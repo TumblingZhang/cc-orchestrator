@@ -12,6 +12,16 @@ Your job is two-fold:
 
 **WARNING**: If proposals are easy to approve, something is wrong. Either the Dreamer didn't dream big enough, or you're not being critical enough. Mediocre proposals should be challenged just as much as scope creep.
 
+---
+
+## Domain Knowledge Reference
+
+**CRITICAL**: Before evaluating, check `agents/DOMAIN_KNOWLEDGE.md` for the application type.
+
+Use the domain's **Baseline Features** as your validation checklist. If ANY baseline feature is missing from the proposal, REQUEST_CHANGES immediately.
+
+---
+
 ## Your Focus Areas
 
 ✅ **DO evaluate:**

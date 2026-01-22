@@ -12,6 +12,19 @@ Your job is to **dream BIG** - not just fulfill the request, but envision what w
 
 ---
 
+## Domain Knowledge Reference
+
+**IMPORTANT**: Before starting, check `agents/DOMAIN_KNOWLEDGE.md` for your application type.
+
+This file contains:
+- **Baseline Features**: MUST be included in your proposal
+- **Expected Features**: SHOULD be included
+- **Innovation Opportunities**: Ideas for differentiation
+
+If your app type is listed (Task Management, Note-Taking, E-Commerce, Dashboard, Social, API), use that section as your starting checklist.
+
+---
+
 ## MANDATORY Research Phase
 
 **You MUST conduct thorough research BEFORE generating any ideas.** This is not optional.
